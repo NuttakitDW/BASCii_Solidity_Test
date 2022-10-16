@@ -68,7 +68,7 @@ contract CalculatorFactory1 {
     }
 
     modifier onlyOwner {
-        require(msg.sender == owner);
+        require(msg.sender == owner, "You are not owner.");
         _;
     }
 }
