@@ -584,6 +584,16 @@ struct Student {
     uint256 score;
 }
 
+struct Answer {
+    bool ans1;
+    bool ans2;
+    bool ans3;
+    bool ans4;
+    bool ans5;
+    bool ans6;
+    bool ans7;
+}
+
 interface IExamStation {
     function register(string memory _name, uint256 _id) external;
 
@@ -594,6 +604,8 @@ interface IExamStation {
     function getInstruction() external view returns (string memory);
 
     function unpause() external;
+
+    function checkAns(uint256 _id) external view returns (Answer memory);
 }
 
 contract ExamStation is IExamStation, Pausable, Ownable {
@@ -605,9 +617,8 @@ contract ExamStation is IExamStation, Pausable, Ownable {
     mapping(address => bool) public isWalletUsed;
     mapping(address => uint256) public walletToId;
     mapping(uint256 => Student) public idToStudent;
-
+    mapping(uint256 => Answer) public idToAns;
     mapping(address => bool) public isContractUsed;
-
     mapping(uint256 => string) public instruction;
 
     modifier onlyTester() {
@@ -650,39 +661,65 @@ contract ExamStation is IExamStation, Pausable, Ownable {
 
         uint256 _id = walletToId[msg.sender];
         Student storage _student = idToStudent[_id];
-        uint256 _score = _calScore(_contract);
+        uint256 _score = _calScore(_id, _contract);
         _student.score = _score;
     }
 
-    function _calScore(address _contract) internal returns (uint256) {
+    function _calScore(uint256 _id, address _contract)
+        internal
+        returns (uint256)
+    {
         uint256 totalScore;
+
+        Answer storage ans = idToAns[_id];
 
         if (_check1(_contract)) {
             totalScore += 1;
+            ans.ans1 = true;
+        } else {
+            ans.ans1 = false;
         }
 
         if (_check2(_contract)) {
             totalScore += 1;
+            ans.ans2 = true;
+        } else {
+            ans.ans2 = false;
         }
 
         if (_check3(_contract)) {
             totalScore += 1;
+            ans.ans3 = true;
+        } else {
+            ans.ans3 = false;
         }
 
         if (_check4(_contract)) {
             totalScore += 1;
+            ans.ans4 = true;
+        } else {
+            ans.ans4 = false;
         }
 
         if (_check5(_contract)) {
             totalScore += 1;
+            ans.ans5 = true;
+        } else {
+            ans.ans5 = false;
         }
 
         if (_check6(_contract)) {
             totalScore += 1;
+            ans.ans6 = true;
+        } else {
+            ans.ans6 = false;
         }
 
         if (_check7(_contract)) {
             totalScore += 1;
+            ans.ans7 = true;
+        } else {
+            ans.ans7 = false;
         }
 
         return totalScore;
@@ -724,65 +761,18 @@ contract ExamStation is IExamStation, Pausable, Ownable {
         return true;
     }
 
-    // Task 9: Declare simple variables.
+    // Task 4: Declare Array.
+    // Task 5: Create function and use Struct.
     function _check3(address _contract) internal returns (bool) {
-        uint256 testNum = _getNumTest();
-        try ICalculator(_contract).setStatus() {} catch {
+        try ICalculator(_contract).createCalculator("test", 123) {} catch {
             return false;
         }
 
-        try ICalculator(_contract).getStatus() returns (Status s) {
-            if (testNum == 0 && s == Status.open) {
-                return true;
-            }
-
-            if (testNum == 1 && s == Status.lunch) {
-                return true;
-            }
-
-            if (testNum == 2 && s == Status.close) {
-                return true;
-            }
-        } catch {
-            return false;
-        }
-    }
-
-    // Task 8: Constructor, Modifier & Require.
-    function _check4(address _contract) internal returns (bool) {
-        try ICalculator(_contract).deleteCalculator(0) {} catch Error(
-            string memory reason
+        try ICalculator(_contract).calculators(0) returns (
+            string memory _a,
+            uint256 _b
         ) {
-            if (
-                keccak256(bytes("You are not owner.")) !=
-                keccak256(bytes(reason))
-            ) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    // Task 7: For loop/While Loop
-    function _check5(address _contract) internal view returns (bool) {
-        uint256 testNum = _getNumTest();
-        uint256[] memory listOfNum = new uint256[](3);
-
-        listOfNum[0] = 2;
-        listOfNum[1] = 3;
-        listOfNum[2] = 4;
-
-        try ICalculator(_contract).loop(listOfNum) returns (uint256 res) {
-            if (testNum == 0 && res == 9) {
-                return true;
-            }
-
-            if (testNum == 1 && res == 24) {
-                return true;
-            }
-
-            if (testNum == 2 && res == 9) {
+            if (keccak256(bytes(_a)) != keccak256(bytes("test")) && 123 == _b) {
                 return true;
             }
         } catch {
@@ -793,7 +783,7 @@ contract ExamStation is IExamStation, Pausable, Ownable {
     }
 
     // Task 6: Read-only function, Operator and if-else.
-    function _check6(address _contract) internal view returns (bool) {
+    function _check4(address _contract) internal view returns (bool) {
         uint256 testNum = _getNumTest();
         uint256 _a = 3;
         uint256 _b = 2;
@@ -840,18 +830,25 @@ contract ExamStation is IExamStation, Pausable, Ownable {
         return false;
     }
 
-    // Task 4: Declare Array.
-    // Task 5: Create function and use Struct.
-    function _check7(address _contract) internal returns (bool) {
-        try ICalculator(_contract).createCalculator("test", 123) {} catch {
-            return false;
-        }
+    // Task 7: For loop/While Loop
+    function _check5(address _contract) internal view returns (bool) {
+        uint256 testNum = _getNumTest();
+        uint256[] memory listOfNum = new uint256[](3);
 
-        try ICalculator(_contract).calculators(0) returns (
-            string memory _a,
-            uint256 _b
-        ) {
-            if (keccak256(bytes(_a)) != keccak256(bytes("test")) && 123 == _b) {
+        listOfNum[0] = 2;
+        listOfNum[1] = 3;
+        listOfNum[2] = 4;
+
+        try ICalculator(_contract).loop(listOfNum) returns (uint256 res) {
+            if (testNum == 0 && res == 9) {
+                return true;
+            }
+
+            if (testNum == 1 && res == 24) {
+                return true;
+            }
+
+            if (testNum == 2 && res == 9) {
                 return true;
             }
         } catch {
@@ -861,8 +858,57 @@ contract ExamStation is IExamStation, Pausable, Ownable {
         return false;
     }
 
+    // Task 8: Constructor, Modifier & Require.
+    function _check6(address _contract) internal returns (bool) {
+        try ICalculator(_contract).deleteCalculator(0) {} catch Error(
+            string memory reason
+        ) {
+            if (
+                keccak256(bytes("You are not owner.")) !=
+                keccak256(bytes(reason))
+            ) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // Task 9: Declare simple variables.
+    function _check7(address _contract) internal returns (bool) {
+        uint256 testNum = _getNumTest();
+        try ICalculator(_contract).setStatus() {} catch {
+            return false;
+        }
+
+        try ICalculator(_contract).getStatus() returns (Status s) {
+            if (testNum == 0 && s == Status.open) {
+                return true;
+            }
+
+            if (testNum == 1 && s == Status.lunch) {
+                return true;
+            }
+
+            if (testNum == 2 && s == Status.close) {
+                return true;
+            }
+        } catch {
+            return false;
+        }
+    }
+
     function checkScore(uint256 _id) public view override returns (uint256) {
         return idToStudent[_id].score;
+    }
+
+    function checkAns(uint256 _id)
+        public
+        view
+        override
+        returns (Answer memory)
+    {
+        return idToAns[_id];
     }
 
     function getInstruction()
@@ -893,7 +939,7 @@ contract ExamStation is IExamStation, Pausable, Ownable {
         _pause();
     }
 
-    function unpause() public onlyOwner {
+    function unpause() public override onlyOwner {
         _unpause();
     }
 
