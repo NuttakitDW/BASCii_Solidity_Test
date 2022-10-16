@@ -27,8 +27,8 @@ contract CalculatorFactory3 {
         owner = msg.sender;
     }
 
-    function createCalculator(string memory _model, uint _serialNumber) public {
-        calculators.push(Calculator(_model, _serialNumber));
+    function createCalculator(string memory _color, uint _price) public {
+        calculators.push(Calculator(_color, _price));
     }
 
     function calculate(string memory _operator, uint _x, uint _y) public view returns(uint) {
