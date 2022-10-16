@@ -18,4 +18,6 @@ interface IExamStation {
     function checkScore(uint256 _id) external view returns (uint256);
 
     function getInstruction() external view returns (string memory);
+
+    function unpause() external;
 }

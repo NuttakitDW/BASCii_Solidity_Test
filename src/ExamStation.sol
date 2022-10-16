@@ -37,7 +37,7 @@ contract ExamStation is IExamStation, Pausable, Ownable {
     function register(string memory _name, uint256 _id)
         public
         override
-        whenNotPaused
+        whenPaused
     {
         require(isWalletUsed[msg.sender] == false, "This wallet already used");
         require(_studentIds.contains(_id) == false, "This id already used");
@@ -87,6 +87,14 @@ contract ExamStation is IExamStation, Pausable, Ownable {
         }
 
         if (_check5(_contract)) {
+            totalScore += 1;
+        }
+
+        if (_check6(_contract)) {
+            totalScore += 1;
+        }
+
+        if (_check7(_contract)) {
             totalScore += 1;
         }
 
@@ -199,13 +207,70 @@ contract ExamStation is IExamStation, Pausable, Ownable {
 
     // Task 6: Read-only function, Operator and if-else.
     function _check6(address _contract) internal view returns (bool) {
+        uint256 testNum = _getNumTest();
+        uint256 _a = 3;
+        uint256 _b = 2;
+
+        if (testNum == 0) {
+            try ICalculator(_contract).calculate("plus", _a, _b) returns (
+                uint256 res
+            ) {
+                if (res == 5) {
+                    return true;
+                }
+                return false;
+            } catch {
+                return false;
+            }
+        }
+
+        if (testNum == 1) {
+            try
+                ICalculator(_contract).calculate("exponential", _a, _b)
+            returns (uint256 res) {
+                if (res == 9) {
+                    return true;
+                }
+                return false;
+            } catch {
+                return false;
+            }
+        }
+
+        if (testNum == 2) {
+            try ICalculator(_contract).calculate("minus", _a, _b) returns (
+                uint256 res
+            ) {
+                if (res == 1) {
+                    return true;
+                }
+                return false;
+            } catch {
+                return false;
+            }
+        }
+
         return false;
     }
 
     // Task 4: Declare Array.
     // Task 5: Create function and use Struct.
+    function _check7(address _contract) internal returns (bool) {
+        try ICalculator(_contract).createCalculator("test", 123) {} catch {
+            return false;
+        }
 
-    function _check7(address _contract) internal view returns (bool) {
+        try ICalculator(_contract).calculators(0) returns (
+            string memory _a,
+            uint256 _b
+        ) {
+            if (keccak256(bytes(_a)) != keccak256(bytes("test")) && 123 == _b) {
+                return true;
+            }
+        } catch {
+            return false;
+        }
+
         return false;
     }
 
