@@ -118,7 +118,7 @@ contract ExamStation is IExamStation, Pausable, Ownable {
         } catch {
             return false;
         }
-        try ICalculator(_contract).myName() returns (string memory _name) {
+        try ICalculator(_contract).name() returns (string memory _name) {
             if (keccak256(bytes(std.name)) != keccak256(bytes(_name))) {
                 return false;
             }
@@ -136,16 +136,16 @@ contract ExamStation is IExamStation, Pausable, Ownable {
             return false;
         }
 
-        try ICalculator(_contract).status() returns (Status s) {
-            if (testNum == 0 && s == Status.Open) {
+        try ICalculator(_contract).getStatus() returns (Status s) {
+            if (testNum == 0 && s == Status.open) {
                 return true;
             }
 
-            if (testNum == 1 && s == Status.Break) {
+            if (testNum == 1 && s == Status.lunch) {
                 return true;
             }
 
-            if (testNum == 2 && s == Status.Close) {
+            if (testNum == 2 && s == Status.close) {
                 return true;
             }
         } catch {
@@ -153,11 +153,59 @@ contract ExamStation is IExamStation, Pausable, Ownable {
         }
     }
 
-    function _check4(address _contract) internal view returns (bool) {
+    // Task 8: Constructor, Modifier & Require.
+    function _check4(address _contract) internal returns (bool) {
+        try ICalculator(_contract).deleteCalculator(0) {} catch Error(
+            string memory reason
+        ) {
+            if (
+                keccak256(bytes("You are not owner.")) !=
+                keccak256(bytes(reason))
+            ) {
+                return true;
+            }
+        }
+
         return false;
     }
 
+    // Task 7: For loop/While Loop
     function _check5(address _contract) internal view returns (bool) {
+        uint256 testNum = _getNumTest();
+        uint256[] memory listOfNum = new uint256[](3);
+
+        listOfNum[0] = 2;
+        listOfNum[1] = 3;
+        listOfNum[2] = 4;
+
+        try ICalculator(_contract).loop(listOfNum) returns (uint256 res) {
+            if (testNum == 0 && res == 9) {
+                return true;
+            }
+
+            if (testNum == 1 && res == 24) {
+                return true;
+            }
+
+            if (testNum == 2 && res == 9) {
+                return true;
+            }
+        } catch {
+            return false;
+        }
+
+        return false;
+    }
+
+    // Task 6: Read-only function, Operator and if-else.
+    function _check6(address _contract) internal view returns (bool) {
+        return false;
+    }
+
+    // Task 4: Declare Array.
+    // Task 5: Create function and use Struct.
+
+    function _check7(address _contract) internal view returns (bool) {
         return false;
     }
 

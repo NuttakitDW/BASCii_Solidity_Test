@@ -2,14 +2,19 @@
 pragma solidity ^0.8.0;
 
 enum Status {
-    Undefined,
-    Open,
-    Break,
-    Close
+    undefined,
+    open,
+    lunch,
+    close
+}
+
+struct Calculator {
+    string model;
+    uint256 price;
 }
 
 interface ICalculator {
-    function myName() external view returns (string memory);
+    function name() external view returns (string memory);
 
     function id() external view returns (uint256);
 
@@ -17,5 +22,22 @@ interface ICalculator {
 
     function setStatus() external;
 
-    function status() external view returns (Status);
+    function getStatus() external view returns (Status);
+
+    function calculate(
+        string memory _operator,
+        uint256 _x,
+        uint256 _y
+    ) external view returns (uint256);
+
+    function loop(uint256[] memory listOfNum) external view returns (uint256);
+
+    function createCalculator(string memory, uint256) external;
+
+    function deleteCalculator(uint256 _index) external;
+
+    function calculators(uint256 _index)
+        external
+        view
+        returns (string memory, uint256);
 }
