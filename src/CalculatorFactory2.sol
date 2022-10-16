@@ -1,6 +1,6 @@
 pragma solidity ^0.8.0;
 
-contract CalculatorFactory1 {
+contract CalculatorFactory2 {
 
     string public name = "Nuttakit Kundum";
     uint public id = 6130159921;
