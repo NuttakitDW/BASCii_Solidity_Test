@@ -58,6 +58,10 @@ contract CalculatorFactory1 {
     function setStatus() public {
         status = Status.open;
     }
+    
+    function getStatus() public view returns(Status) {
+        return status;
+    }
 
     function _compareStrings(string memory a, string memory b) internal view returns (bool) {
         return (keccak256(abi.encodePacked((a))) == keccak256(abi.encodePacked((b))));
