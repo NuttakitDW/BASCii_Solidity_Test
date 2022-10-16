@@ -2,6 +2,8 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
+import "./modules/libraries/EnumerableSetUint.sol";
 
 interface ICalculator {}
 
@@ -13,20 +15,20 @@ interface ITraffic {}
 
 interface IBook {}
 
-contract ExamStation is Ownable {
-    struct Student {
-        string name;
-        address wallet;
-        uint256 id;
-        uint256 testNumber;
-        uint256 score;
-    }
+struct Student {
+    string name;
+    address wallet;
+    uint256 id;
+    uint256 testNumber;
+    uint256 score;
+}
 
-    bool public isStart;
+contract ExamStation is Pausable, Ownable {
+    using EnumerableSetUint for EnumerableSetUint.UintSet;
+
+    EnumerableSetUint.UintSet internal _studentIds;
 
     mapping(address => bool) public isWalletUsed;
-    mapping(uint256 => bool) public isIdUsed;
-
     mapping(address => uint256) public walletToId;
     mapping(uint256 => Student) public idToStudent;
 
@@ -40,9 +42,9 @@ contract ExamStation is Ownable {
         pause();
     }
 
-    function register(string memory _name, uint256 _id) public {
+    function register(string memory _name, uint256 _id) public whenNotPaused {
         require(isWalletUsed[msg.sender] == false, "This wallet already used");
-        require(isIdUsed[_id] == false, "This id already used");
+        require(_studentIds.contains(_id) == false, "This id already used");
 
         walletToId[msg.sender] = _id;
         idToStudent[_id] = Student(
@@ -54,10 +56,10 @@ contract ExamStation is Ownable {
         );
 
         isWalletUsed[msg.sender] = true;
-        isIdUsed[_id] = true;
+        _studentIds.add(_id);
     }
 
-    function submit(address _contract) public onlyTester {
+    function submit(address _contract) public onlyTester whenNotPaused {
         require(
             isContractUsed[_contract] == false,
             "This contract already used."
@@ -66,6 +68,8 @@ contract ExamStation is Ownable {
 
         uint256 _id = walletToId[msg.sender];
         Student storage _student = idToStudent[_id];
+        uint256 _score = _calScore(_student.testNumber);
+        _student.score = _score;
     }
 
     function _calScore(uint256 _numTest) internal view returns (uint256) {
@@ -115,7 +119,12 @@ contract ExamStation is Ownable {
         return score;
     }
 
-    function getInstruction() public view returns (string memory) {
+    function getInstruction()
+        public
+        view
+        whenNotPaused
+        returns (string memory)
+    {
         return instruction[_getNumTest()];
     }
 
@@ -134,12 +143,12 @@ contract ExamStation is Ownable {
         instruction[_no] = _url;
     }
 
-    function start() public onlyOwner {
-        isStart = true;
+    function pause() public onlyOwner {
+        _pause();
     }
 
-    function pause() public onlyOwner {
-        isStart = false;
+    function unpause() public onlyOwner {
+        _unpause();
     }
 
     function _random() internal view returns (uint256) {
@@ -154,5 +163,30 @@ contract ExamStation is Ownable {
     modifier onlyTester() {
         require(isWalletUsed[msg.sender] == true, "Please register first.");
         _;
+    }
+
+    function getIdsCount() external view returns (uint256) {
+        return _studentIds.length();
+    }
+
+    function getAllIds() external view returns (uint256[] memory) {
+        return _studentIds.getAll();
+    }
+
+    function getIdsByPage(uint256 _page, uint256 _limit)
+        external
+        view
+        returns (uint256[] memory)
+    {
+        return _studentIds.get(_page, _limit);
+    }
+
+    function getExamResult() external view returns (Student[] memory) {
+        uint256[] memory ids = _studentIds.getAll();
+        Student[] memory res = new Student[](ids.length);
+        for (uint256 i; i < ids.length; i++) {
+            res[i] = idToStudent[ids[i]];
+        }
+        return res;
     }
 }
