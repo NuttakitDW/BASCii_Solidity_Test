@@ -190,10 +190,10 @@ contract ExamStation is IExamStation, Pausable, Ownable {
         uint256 _b = 2;
 
         if (testNum == 0) {
-            try ICalculator(_contract).calculate("plus", _a, _b) returns (
+            try ICalculator(_contract).calculate("minus", _a, _b) returns (
                 uint256 res
             ) {
-                if (res == 5) {
+                if (res == 1) {
                     return true;
                 }
                 return false;
@@ -216,10 +216,10 @@ contract ExamStation is IExamStation, Pausable, Ownable {
         }
 
         if (testNum == 2) {
-            try ICalculator(_contract).calculate("minus", _a, _b) returns (
+            try ICalculator(_contract).calculate("plus", _a, _b) returns (
                 uint256 res
             ) {
-                if (res == 1) {
+                if (res == 5) {
                     return true;
                 }
                 return false;
@@ -287,11 +287,11 @@ contract ExamStation is IExamStation, Pausable, Ownable {
                 return true;
             }
 
-            if (testNum == 1 && s == Status.lunch) {
+            if (testNum == 1 && s == Status.close) {
                 return true;
             }
 
-            if (testNum == 2 && s == Status.close) {
+            if (testNum == 2 && s == Status.lunch) {
                 return true;
             }
         } catch {
