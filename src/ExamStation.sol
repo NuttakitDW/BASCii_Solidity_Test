@@ -173,7 +173,7 @@ contract ExamStation is IExamStation, Pausable, Ownable {
             string memory _a,
             uint256 _b
         ) {
-            if (keccak256(bytes(_a)) != keccak256(bytes("test")) && 123 == _b) {
+            if (keccak256(bytes(_a)) == keccak256(bytes("test")) && 123 == _b) {
                 return true;
             }
         } catch {
@@ -265,7 +265,7 @@ contract ExamStation is IExamStation, Pausable, Ownable {
             string memory reason
         ) {
             if (
-                keccak256(bytes("You are not owner.")) !=
+                keccak256(bytes("You are not owner.")) ==
                 keccak256(bytes(reason))
             ) {
                 return true;
