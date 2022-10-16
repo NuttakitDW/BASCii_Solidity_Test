@@ -270,6 +270,8 @@ contract ExamStation is IExamStation, Pausable, Ownable {
             ) {
                 return true;
             }
+        } catch {
+            return false;
         }
 
         return false;
