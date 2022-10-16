@@ -14,4 +14,8 @@ interface IExamStation {
     function register(string memory _name, uint256 _id) external;
 
     function submit(address _contract) external;
+
+    function checkScore(uint256 _id) external view returns (uint256);
+
+    function getInstruction() external view returns (string memory);
 }

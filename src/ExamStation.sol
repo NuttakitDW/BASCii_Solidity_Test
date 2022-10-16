@@ -161,13 +161,14 @@ contract ExamStation is IExamStation, Pausable, Ownable {
         return false;
     }
 
-    function checkScore(uint256 _id) public view returns (uint256) {
+    function checkScore(uint256 _id) public view override returns (uint256) {
         return idToStudent[_id].score;
     }
 
     function getInstruction()
         public
         view
+        override
         whenNotPaused
         returns (string memory)
     {
