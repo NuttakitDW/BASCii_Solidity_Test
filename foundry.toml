@@ -5,3 +5,4 @@ libs = ['lib']
 gas_reports = ["*"]
 optimizer = true
 optimizer_runs = 20000
+solc_version = '0.8.7'

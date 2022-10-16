@@ -6,31 +6,10 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "./modules/libraries/EnumerableSetUint.sol";
 
-interface ICalculator {
-    function myName() external view returns (string memory);
+import "./modules/interfaces/ICalculator.sol";
+import "./modules/interfaces/IExamStation.sol";
 
-    function id() external view returns (uint256);
-
-    function owner() external view returns (address);
-}
-
-interface ICar {}
-
-interface IRobot {}
-
-interface ITraffic {}
-
-interface IBook {}
-
-struct Student {
-    string name;
-    address wallet;
-    uint256 id;
-    uint256 testNumber;
-    uint256 score;
-}
-
-contract ExamStation is Pausable, Ownable {
+contract ExamStation is IExamStation, Pausable, Ownable {
     using Address for address;
     using EnumerableSetUint for EnumerableSetUint.UintSet;
 
@@ -41,8 +20,6 @@ contract ExamStation is Pausable, Ownable {
     mapping(uint256 => Student) public idToStudent;
 
     mapping(address => bool) public isContractUsed;
-
-    uint256[] public numberOfTest = [0, 1, 2, 3, 4, 0, 1, 2, 3, 4];
 
     mapping(uint256 => string) public instruction;
 
@@ -57,24 +34,27 @@ contract ExamStation is Pausable, Ownable {
 
     //////////////////////// core ////////////////////////
 
-    function register(string memory _name, uint256 _id) public whenNotPaused {
+    function register(string memory _name, uint256 _id)
+        public
+        override
+        whenNotPaused
+    {
         require(isWalletUsed[msg.sender] == false, "This wallet already used");
         require(_studentIds.contains(_id) == false, "This id already used");
 
         walletToId[msg.sender] = _id;
-        idToStudent[_id] = Student(
-            _name,
-            msg.sender,
-            _id,
-            numberOfTest[_random()],
-            0
-        );
+        idToStudent[_id] = Student(_name, msg.sender, _id, _random(), 0);
 
         isWalletUsed[msg.sender] = true;
         _studentIds.add(_id);
     }
 
-    function submit(address _contract) public onlyTester whenNotPaused {
+    function submit(address _contract)
+        public
+        override
+        onlyTester
+        whenNotPaused
+    {
         require(
             isContractUsed[_contract] == false,
             "This contract already used."
@@ -83,15 +63,11 @@ contract ExamStation is Pausable, Ownable {
 
         uint256 _id = walletToId[msg.sender];
         Student storage _student = idToStudent[_id];
-        uint256 _score = _calScore(_student.testNumber, _contract);
+        uint256 _score = _calScore(_contract);
         _student.score = _score;
     }
 
-    function _calScore(uint256 _numTest, address _contract)
-        internal
-        view
-        returns (uint256)
-    {
+    function _calScore(address _contract) internal returns (uint256) {
         uint256 totalScore;
 
         if (_check1(_contract)) {
@@ -113,6 +89,8 @@ contract ExamStation is Pausable, Ownable {
         if (_check5(_contract)) {
             totalScore += 1;
         }
+
+        return totalScore;
     }
 
     // Task 1: Set up a contract.
@@ -151,8 +129,28 @@ contract ExamStation is Pausable, Ownable {
         return true;
     }
 
-    function _check3(address _contract) internal view returns (bool) {
-        return false;
+    // Task 9: Declare simple variables.
+    function _check3(address _contract) internal returns (bool) {
+        uint256 testNum = _getNumTest();
+        try ICalculator(_contract).setStatus() {} catch {
+            return false;
+        }
+
+        try ICalculator(_contract).status() returns (Status s) {
+            if (testNum == 0 && s == Status.Open) {
+                return true;
+            }
+
+            if (testNum == 1 && s == Status.Break) {
+                return true;
+            }
+
+            if (testNum == 2 && s == Status.Close) {
+                return true;
+            }
+        } catch {
+            return false;
+        }
     }
 
     function _check4(address _contract) internal view returns (bool) {
@@ -179,14 +177,12 @@ contract ExamStation is Pausable, Ownable {
     function _getNumTest() internal view returns (uint256) {
         uint256 _id = walletToId[msg.sender];
         Student memory _student = idToStudent[_id];
-        uint256 _numberOfTest = _student.testNumber;
-        return _numberOfTest;
+        return _student.testNumber;
     }
 
     function _getStudent() internal view returns (Student memory) {
         uint256 _id = walletToId[msg.sender];
         Student memory _student = idToStudent[_id];
-
         return _student;
     }
 
@@ -238,7 +234,7 @@ contract ExamStation is Pausable, Ownable {
             keccak256(
                 abi.encodePacked(block.timestamp, block.difficulty, msg.sender)
             )
-        ) % 10;
+        ) % 3;
         return number;
     }
 }
