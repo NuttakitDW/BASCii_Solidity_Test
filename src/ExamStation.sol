@@ -38,9 +38,16 @@ contract ExamStation is Pausable, Ownable {
 
     mapping(uint256 => string) public instruction;
 
+    modifier onlyTester() {
+        require(isWalletUsed[msg.sender] == true, "Please register first.");
+        _;
+    }
+
     constructor() {
         pause();
     }
+
+    //////////////////////// core ////////////////////////
 
     function register(string memory _name, uint256 _id) public whenNotPaused {
         require(isWalletUsed[msg.sender] == false, "This wallet already used");
@@ -119,6 +126,10 @@ contract ExamStation is Pausable, Ownable {
         return score;
     }
 
+    function checkScore(uint256 _id) public view returns (uint256) {
+        return idToStudent[_id].score;
+    }
+
     function getInstruction()
         public
         view
@@ -135,13 +146,7 @@ contract ExamStation is Pausable, Ownable {
         return _numberOfTest;
     }
 
-    function checkScore(uint256 _id) public view returns (uint256) {
-        return idToStudent[_id].score;
-    }
-
-    function addTest(uint256 _no, string memory _url) public onlyOwner {
-        instruction[_no] = _url;
-    }
+    //////////////////////// owner setter ////////////////////////
 
     function pause() public onlyOwner {
         _pause();
@@ -151,19 +156,11 @@ contract ExamStation is Pausable, Ownable {
         _unpause();
     }
 
-    function _random() internal view returns (uint256) {
-        uint256 number = uint256(
-            keccak256(
-                abi.encodePacked(block.timestamp, block.difficulty, msg.sender)
-            )
-        ) % 10;
-        return number;
+    function addTest(uint256 _no, string memory _url) public onlyOwner {
+        instruction[_no] = _url;
     }
 
-    modifier onlyTester() {
-        require(isWalletUsed[msg.sender] == true, "Please register first.");
-        _;
-    }
+    //////////////////////// getter ////////////////////////
 
     function getIdsCount() external view returns (uint256) {
         return _studentIds.length();
@@ -188,5 +185,16 @@ contract ExamStation is Pausable, Ownable {
             res[i] = idToStudent[ids[i]];
         }
         return res;
+    }
+
+    //////////////////////// uitls ////////////////////////
+
+    function _random() internal view returns (uint256) {
+        uint256 number = uint256(
+            keccak256(
+                abi.encodePacked(block.timestamp, block.difficulty, msg.sender)
+            )
+        ) % 10;
+        return number;
     }
 }
