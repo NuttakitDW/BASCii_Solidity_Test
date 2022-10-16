@@ -1,11 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "./modules/libraries/EnumerableSetUint.sol";
 
-interface ICalculator {}
+interface ICalculator {
+    function myName() external view returns (string memory);
+
+    function id() external view returns (uint256);
+
+    function owner() external view returns (address);
+}
 
 interface ICar {}
 
@@ -24,6 +31,7 @@ struct Student {
 }
 
 contract ExamStation is Pausable, Ownable {
+    using Address for address;
     using EnumerableSetUint for EnumerableSetUint.UintSet;
 
     EnumerableSetUint.UintSet internal _studentIds;
@@ -75,55 +83,84 @@ contract ExamStation is Pausable, Ownable {
 
         uint256 _id = walletToId[msg.sender];
         Student storage _student = idToStudent[_id];
-        uint256 _score = _calScore(_student.testNumber);
+        uint256 _score = _calScore(_student.testNumber, _contract);
         _student.score = _score;
     }
 
-    function _calScore(uint256 _numTest) internal view returns (uint256) {
-        if (_numTest == 0) {
-            return _check0();
+    function _calScore(uint256 _numTest, address _contract)
+        internal
+        view
+        returns (uint256)
+    {
+        uint256 totalScore;
+
+        if (_check1(_contract)) {
+            totalScore += 1;
         }
 
-        if (_numTest == 1) {
-            return _check1();
+        if (_check2(_contract)) {
+            totalScore += 1;
         }
 
-        if (_numTest == 2) {
-            return _check2();
+        if (_check3(_contract)) {
+            totalScore += 1;
         }
 
-        if (_numTest == 3) {
-            return _check3();
+        if (_check4(_contract)) {
+            totalScore += 1;
         }
 
-        if (_numTest == 4) {
-            return _check4();
+        if (_check5(_contract)) {
+            totalScore += 1;
         }
     }
 
-    function _check0() internal view returns (uint256) {
-        uint256 score;
-        return score;
+    // Task 1: Set up a contract.
+    function _check1(address _contract) internal view returns (bool) {
+        if (_contract.isContract()) {
+            return true;
+        }
+        return false;
     }
 
-    function _check1() internal view returns (uint256) {
-        uint256 score;
-        return score;
+    // Task 2: Declare simple variables.
+    function _check2(address _contract) internal view returns (bool) {
+        Student memory std = _getStudent();
+        try ICalculator(_contract).owner() returns (address _owner) {
+            if (std.wallet != _owner) {
+                return false;
+            }
+        } catch {
+            return false;
+        }
+        try ICalculator(_contract).id() returns (uint256 _id) {
+            if (std.id != _id) {
+                return false;
+            }
+        } catch {
+            return false;
+        }
+        try ICalculator(_contract).myName() returns (string memory _name) {
+            if (keccak256(bytes(std.name)) != keccak256(bytes(_name))) {
+                return false;
+            }
+        } catch {
+            return false;
+        }
+
+        return true;
     }
 
-    function _check2() internal view returns (uint256) {
-        uint256 score;
-        return score;
+    function _check3(address _contract) internal view returns (bool) {
+        return false;
     }
 
-    function _check3() internal view returns (uint256) {
-        uint256 score;
-        return score;
+    function _check4(address _contract) internal view returns (bool) {
+        return false;
     }
 
-    function _check4() internal view returns (uint256) {
-        uint256 score;
-        return score;
+    function _check5(address _contract) internal view returns (bool) {
+        return false;
     }
 
     function checkScore(uint256 _id) public view returns (uint256) {
@@ -144,6 +181,13 @@ contract ExamStation is Pausable, Ownable {
         Student memory _student = idToStudent[_id];
         uint256 _numberOfTest = _student.testNumber;
         return _numberOfTest;
+    }
+
+    function _getStudent() internal view returns (Student memory) {
+        uint256 _id = walletToId[msg.sender];
+        Student memory _student = idToStudent[_id];
+
+        return _student;
     }
 
     //////////////////////// owner setter ////////////////////////
